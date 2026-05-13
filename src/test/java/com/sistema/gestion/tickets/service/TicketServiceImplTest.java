@@ -7,6 +7,7 @@ import com.sistema.gestion.tickets.entity.TicketHistory;
 import com.sistema.gestion.tickets.entity.User;
 import com.sistema.gestion.tickets.enums.Role;
 import com.sistema.gestion.tickets.enums.TicketStatus;
+import com.sistema.gestion.tickets.exception.ResourceNotFoundException;
 import com.sistema.gestion.tickets.mapper.TicketMapper;
 import com.sistema.gestion.tickets.repository.TicketHistoryRepository;
 import com.sistema.gestion.tickets.repository.TicketRepository;
@@ -17,19 +18,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.times;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 // Le decimos a JUnit que usaremos Mockito para simular objetos
 @ExtendWith(MockitoExtension.class)
@@ -108,5 +104,33 @@ public class TicketServiceImplTest {
 
         // 5. Verificamos que el registro de auditoría también se haya guardado
         verify(historyRepository, times(1)).save(any(TicketHistory.class));
+    }
+
+    @Test
+    void createTicket_UserNotFound_ThrowsResourceNotFoundException() {
+
+        // --- GIVEN (Escenario) ---
+        String unregisteredEmail = "fantasma@empresa.com";
+        TicketRequestDTO requestDTO = new TicketRequestDTO("Falla en servidor", "No hay conexión");
+
+        // Le enseñamos al Mock que, cuando busquen este correo, devuelva un Optional vacío (no existe)
+        when(userRepository.findByEmail(unregisteredEmail)).thenReturn(Optional.empty());
+
+        // --- WHEN & THEN (Acción y Verificación unidas) ---
+        // 1. Usamos assertThrows para verificar que ejecutar esta línea EFECTIVAMENTE detona la excepción esperada
+        ResourceNotFoundException exception = assertThrows(
+                ResourceNotFoundException.class,
+                () -> ticketService.createTicket(requestDTO, unregisteredEmail)
+        );
+
+        // 2. Verificamos que el mensaje de error sea exactamente el que programamos
+        assertEquals("El usuario autenticado no existe en el sistema.", exception.getMessage());
+
+        // --- VERIFICACIÓN DE SEGURIDAD (El toque Senior) ---
+        // 3. Garantizamos que la base de datos NUNCA guardó el ticket (porque el proceso abortó antes)
+        verify(ticketRepository, never()).save(any(Ticket.class));
+
+        // 4. Garantizamos que NUNCA se guardó un registro de auditoría falso
+        verify(historyRepository, never()).save(any(TicketHistory.class));
     }
 }
