@@ -25,6 +25,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static org.springframework.data.jpa.domain.AbstractPersistable_.id;
+
 @Service
 @RequiredArgsConstructor
 public class TicketServiceImpl implements TicketService {
@@ -109,6 +111,15 @@ public class TicketServiceImpl implements TicketService {
         historyRepository.save(history);
 
         return ticketMapper.toResponseDTO(updatedTicket);
+    }
+
+    @Override
+    public TicketResponseDTO getTicketById(Long ticketId) {
+        Ticket ticket = ticketRepository.findById(ticketId)
+                .orElseThrow(() -> new RuntimeException("Ticket no encontrado"));
+
+        // ¡Aquí está la magia! No devuelvas 'ticket' directo, conviértelo a tu DTO
+        return ticketMapper.toResponseDTO(ticket);
     }
 
     @Override

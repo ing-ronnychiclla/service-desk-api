@@ -73,4 +73,11 @@ public class TicketController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<TicketResponseDTO> getTicketById(@PathVariable Long id) {
+        // Asumiendo que tu servicio tiene un método que busca por ID y lo convierte a DTO
+        TicketResponseDTO ticket = ticketService.getTicketById(id);
+        return ResponseEntity.ok(ticket);
+    }
+
 }

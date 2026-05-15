@@ -17,6 +17,8 @@ public interface TicketService {
 
     TicketResponseDTO assignTicket(Long ticketId, AssignTicketRequestDTO assignDTO, String assignerEmail);
 
+    TicketResponseDTO getTicketById(Long ticketId);
+
     Page<TicketResponseDTO> getTicketsPaginated(int page, int size, String status);
 
     List<TicketHistoryResponseDTO> getTicketHistory(Long ticketId);
