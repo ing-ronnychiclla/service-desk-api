@@ -15,6 +15,13 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.List;
+
+import static org.springframework.security.config.Customizer.withDefaults;
 
 @Configuration
 @EnableWebSecurity
@@ -30,10 +37,16 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+
+                // 1. ACTIVAMOS CORS AQUÍ
+                .cors(withDefaults())
+
                 // Desactivamos CSRF (Cross-Site Request Forgery)
                 // Ya que usamos JWT, no dependemos de las Cookies del navegador, por lo que CSRF es innecesario.
+                // 2. Desactivamos CSRF como ya lo teníamos
                 .csrf(AbstractHttpConfigurer::disable)
 
+                // ... (el resto del código se mantiene igual)
                 // Configuramos los permisos de las rutas
                 .authorizeHttpRequests(auth -> auth
                         // Dejamos las rutas de autenticación (Login/Registro) públicas para que cualquiera pueda entrar
@@ -85,5 +98,33 @@ public class SecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+
+    // Importaciones necesarias en la parte superior:
+    // import org.springframework.web.cors.CorsConfiguration;
+    // import org.springframework.web.cors.CorsConfigurationSource;
+    // import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+    // import java.util.List;
+    // import static org.springframework.security.config.Customizer.withDefaults;
+
+    @Bean
+    CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+
+        // El origen de tu Frontend en Angular
+        configuration.setAllowedOrigins(List.of("http://localhost:4200"));
+
+        // Los métodos HTTP que Angular tiene permitido usar
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+
+        // Los headers permitidos (importante para enviar nuestro Bearer Token)
+        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        // Aplicamos esta regla a todas nuestras rutas de la API
+        source.registerCorsConfiguration("/**", configuration);
+
+        return source;
     }
 }
