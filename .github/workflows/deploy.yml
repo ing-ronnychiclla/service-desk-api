@@ -1,0 +1,24 @@
+name: Deploy Backend to AWS EC2
+
+# ¿Cuándo se activa este robot? Cuando alguien haga push a la rama 'main'
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  deploy:
+    name: Deploy to EC2
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Executing remote ssh commands using ssh key
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          # Aquí van los comandos que ejecutabas manualmente
+          script: |
+            cd ~/service-desk-api
+            git pull origin main
+            docker compose up -d --build api
