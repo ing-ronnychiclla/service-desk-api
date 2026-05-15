@@ -123,6 +123,21 @@ public class TicketServiceImpl implements TicketService {
     }
 
     @Override
+    public TicketResponseDTO updateTicketStatus(Long ticketId, String newStatus) {
+        // 1. Buscamos el ticket
+        Ticket ticket = ticketRepository.findById(ticketId)
+                .orElseThrow(() -> new RuntimeException("Ticket no encontrado"));
+
+        // 2. Actualizamos el estado (Asumiendo que tu estado es un String.
+        // Si usas un Enum, sería algo como TicketStatus.valueOf(newStatus))
+        TicketStatus.valueOf(newStatus);
+
+        // 3. Guardamos y convertimos a DTO para devolver a Angular
+        ticketRepository.save(ticket);
+        return ticketMapper.toResponseDTO(ticket);
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public Page<TicketResponseDTO> getTicketsPaginated(int page, int size, String status) {
 

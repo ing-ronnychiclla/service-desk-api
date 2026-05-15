@@ -15,6 +15,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/tickets")
@@ -78,6 +79,18 @@ public class TicketController {
         // Asumiendo que tu servicio tiene un método que busca por ID y lo convierte a DTO
         TicketResponseDTO ticket = ticketService.getTicketById(id);
         return ResponseEntity.ok(ticket);
+    }
+
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<TicketResponseDTO> updateTicketStatus(
+            @PathVariable Long id,
+            @RequestBody Map<String, String> requestBody) {
+
+        // Extraemos el "status" del JSON {"status": "IN_PROGRESS"} que nos mandó Angular
+        String newStatus = requestBody.get("status");
+
+        TicketResponseDTO updatedTicket = ticketService.updateTicketStatus(id, newStatus);
+        return ResponseEntity.ok(updatedTicket);
     }
 
 }
