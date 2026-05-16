@@ -1,25 +1,48 @@
-name: Deploy Backend to AWS EC2
+name: Deploy Backend to AWS EC2 (Corporate CI/CD)
 
-# ¿Cuándo se activa este robot? Cuando alguien haga push a la rama 'main'
 on:
   push:
     branches: [ "main" ]
 
 jobs:
+  # TRABAJO 1: Compilar y subir a Docker Hub (Usa la CPU de GitHub)
+  build-and-push:
+    name: Build and Push Docker Image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          # IMPORTANTE: Reemplaza TU_USUARIO_DOCKER con tu usuario real aquí también
+          tags: ingronny/service-desk-api:latest
+
+  # TRABAJO 2: Entrar a AWS y encender la app (Usa la CPU de AWS solo para ejecutar)
   deploy:
     name: Deploy to EC2
+    needs: build-and-push # Espera a que termine el Trabajo 1
     runs-on: ubuntu-latest
-
     steps:
-      - name: Executing remote ssh commands using ssh key
+      - name: Executing remote ssh commands
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          command_timeout: 30m
-          # Aquí van los comandos que ejecutabas manualmente
           script: |
             cd ~/service-desk-api
             git pull origin main
-            docker compose up -d --build api
+            # IMPORTANTE: Reemplaza TU_USUARIO_DOCKER con tu usuario real
+            docker pull ingronny/service-desk-api:latest
+            # Ya no usamos --build. Solo encendemos el sistema.
+            docker compose up -d

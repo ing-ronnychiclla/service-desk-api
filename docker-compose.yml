@@ -11,8 +11,9 @@ services:
       - "5432:5432"
 
   backend:
-    image: service-desk-api:1.0.0
+    image: ingronny/service-desk-api:latest
     container_name: service_desk_backend
+    restart: always
 
     ports:
       - "8080:8080"
