@@ -22,4 +22,4 @@ jobs:
           script: |
             cd ~/service-desk-api
             git pull origin main
-            docker compose up -d --build backend
+            docker compose up -d --build api
